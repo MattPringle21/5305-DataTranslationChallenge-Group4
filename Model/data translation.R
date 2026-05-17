@@ -19,7 +19,7 @@ library(dynlm)
 # SECTION 2: Load Data
 # -----------------------------------------------------------------------------
 
-df <- read.csv("master_data.csv")
+df <- read.csv("Cleaning/master_data.csv")
 
 # Keep only 1980 onward to match Gindelsky's sample start
 df <- df[df$YEAR >= 1980, ]
@@ -52,12 +52,19 @@ df$D_col     <- c(NA, diff(df$col))
 df$D_hs_fem  <- c(NA, diff(df$hs_fem))
 df$D_col_fem <- c(NA, diff(df$col_fem))
 
-# LFPR and D_lfpr needs a second difference - it is still non-stationary after one diff
+# LFPR, D_lfpr, D_L_gdp. D_gov_gdp, D_col, D_hs, D_hs_fem needs a second difference - it is still non-stationary after one diff
 df$D2_lfpr     <- c(NA, diff(df$D_lfpr))
 df$D2_fem_lfpr <- c(NA, diff(df$D_fem_lfpr))
+df$D2_L_gdp    <- c(NA, diff(df$D_L_gdp))
+df$D2_gov_gdp   <- c(NA, diff(df$D_gov_gdp))
+df$D2_col      <- c(NA, diff(df$D_col))
+df$D2_hs       <- c(NA, diff(df$D_hs))
+df$D2_hs_fem   <- c(NA, diff(df$D_hs_fem))
+
+
 
 # Remove the first two rows which have NA from double-differencing
-df <- df[complete.cases(df[ , c("D_GINI", "D2_lfpr", "D2_fem_lfpr")]), ]
+df <- df[complete.cases(df[ , c("D_GINI", "D2_lfpr", "D2_fem_lfpr", "D2_L_gdp", "D2_gov_gdp", "D2_col", "D2_hs", "D2_hs_fem")]), ]
 
 cat("Observations after differencing:", nrow(df), "\n")
 cat("Years after differencing:", min(df$YEAR), "to", max(df$YEAR), "\n")
@@ -85,13 +92,13 @@ adf_dgini    <- adf.test(df$D_GINI)
 adf_d2lfpr   <- adf.test(df$D2_lfpr)
 adf_d2flfpr  <- adf.test(df$D2_fem_lfpr)
 adf_dunemp   <- adf.test(df$D_unemp)
-adf_dlgdp    <- adf.test(df$D_L_gdp)
-adf_dgovgdp  <- adf.test(df$D_gov_gdp)
+adf_d2lgdp   <- adf.test(df$D2_L_gdp)
+adf_d2govgdp <- adf.test(df$D2_gov_gdp)
 adf_dinfl    <- adf.test(df$D_infl)
-adf_dcol     <- adf.test(df$D_col)
-adf_dhs      <- adf.test(df$D_hs)
+adf_d2col     <- adf.test(df$D2_col)
+adf_d2hs      <- adf.test(df$D2_hs)
 adf_dcolfem  <- adf.test(df$D_col_fem)
-adf_dhsfem   <- adf.test(df$D_hs_fem)
+adf_d2hsfem   <- adf.test(df$D2_hs_fem)
 
 # Print results in a readable table
 cat("Variable              p-value    Result\n")
@@ -103,36 +110,36 @@ cat("D2_fem_lfpr          ", round(adf_d2flfpr$p.value, 4),
     ifelse(adf_d2flfpr$p.value < 0.05, "  Stationary", "  NON-STATIONARY"), "\n")
 cat("D_unemp              ", round(adf_dunemp$p.value,  4),
     ifelse(adf_dunemp$p.value  < 0.05, "  Stationary", "  NON-STATIONARY"), "\n")
-cat("D_L_gdp              ", round(adf_dlgdp$p.value,   4),
-    ifelse(adf_dlgdp$p.value   < 0.05, "  Stationary", "  NON-STATIONARY"), "\n")
-cat("D_gov_gdp            ", round(adf_dgovgdp$p.value, 4),
-    ifelse(adf_dgovgdp$p.value < 0.05, "  Stationary", "  NON-STATIONARY"), "\n")
+cat("D2_L_gdp              ", round(adf_d2lgdp$p.value,   4),
+    ifelse(adf_d2lgdp$p.value   < 0.05, "  Stationary", "  NON-STATIONARY"), "\n")
+cat("D2_gov_gdp            ", round(adf_d2govgdp$p.value, 4),
+    ifelse(adf_d2govgdp$p.value < 0.05, "  Stationary", "  NON-STATIONARY"), "\n")
 cat("D_infl               ", round(adf_dinfl$p.value,   4),
     ifelse(adf_dinfl$p.value   < 0.05, "  Stationary", "  NON-STATIONARY"), "\n")
-cat("D_col                ", round(adf_dcol$p.value,    4),
-    ifelse(adf_dcol$p.value    < 0.05, "  Stationary", "  NON-STATIONARY"), "\n")
-cat("D_hs                 ", round(adf_dhs$p.value,     4),
-    ifelse(adf_dhs$p.value     < 0.05, "  Stationary", "  NON-STATIONARY"), "\n")
+cat("D2_col                ", round(adf_d2col$p.value,    4),
+    ifelse(adf_d2col$p.value    < 0.05, "  Stationary", "  NON-STATIONARY"), "\n")
+cat("D2_hs                 ", round(adf_d2hs$p.value,     4),
+    ifelse(adf_d2hs$p.value     < 0.05, "  Stationary", "  NON-STATIONARY"), "\n")
 cat("D_col_fem            ", round(adf_dcolfem$p.value, 4),
     ifelse(adf_dcolfem$p.value < 0.05, "  Stationary", "  NON-STATIONARY"), "\n")
-cat("D_hs_fem             ", round(adf_dhsfem$p.value,  4),
-    ifelse(adf_dhsfem$p.value  < 0.05, "  Stationary", "  NON-STATIONARY"), "\n")
+cat("D2_hs_fem             ", round(adf_d2hsfem$p.value,  4),
+    ifelse(adf_d2hsfem$p.value  < 0.05, "  Stationary", "  NON-STATIONARY"), "\n")
 
 # Save ADF results as a table
 adf_table <- data.frame(
   Variable   = c("Gini (levels)", "D_GINI", "D2_lfpr", "D2_fem_lfpr",
-                 "D_unemp", "D_L_gdp", "D_gov_gdp", "D_infl",
-                 "D_col", "D_hs", "D_col_fem", "D_hs_fem"),
+                 "D_unemp", "D2_L_gdp", "D2_gov_gdp", "D_infl",
+                 "D2_col", "D2_hs", "D_col_fem", "D2_hs_fem"),
   P_Value    = round(c(adf_levels$p.value,  adf_dgini$p.value,
                        adf_d2lfpr$p.value,  adf_d2flfpr$p.value,
-                       adf_dunemp$p.value,  adf_dlgdp$p.value,
-                       adf_dgovgdp$p.value, adf_dinfl$p.value,
-                       adf_dcol$p.value,    adf_dhs$p.value,
-                       adf_dcolfem$p.value, adf_dhsfem$p.value), 4),
+                       adf_dunemp$p.value,  adf_d2lgdp$p.value,
+                       adf_d2govgdp$p.value, adf_dinfl$p.value,
+                       adf_d2col$p.value,    adf_d2hs$p.value,
+                       adf_dcolfem$p.value, adf_d2hsfem$p.value), 4),
   Stationary = c("No", "Yes", "Yes", "Yes", "Yes", "Yes",
                  "Yes", "Yes", "Yes", "Yes", "Yes", "Yes")
 )
-write.csv(adf_table, "adf_results.csv", row.names = FALSE)
+write.csv(adf_table, "Model/adf_results.csv", row.names = FALSE)
 cat("\nADF results saved to adf_results.csv\n")
 
 # -----------------------------------------------------------------------------
@@ -169,7 +176,7 @@ ar_model <- lm(D_GINI ~ lag1 + lag2 + lag3, data = ar_data)
 summary(ar_model)
 
 # Look at the Pr(>|t|) column in the output above
-# Keep lags where p-value < 0.05
+# Keep lags with reasonable p values (slightly different than Gindelsky)
 # Gindelsky found lag 2 was significant for the Gini index
 
 # -----------------------------------------------------------------------------
@@ -198,12 +205,39 @@ df$D_unemp_l2 <- c(NA, NA, df$D_unemp[-c(n-1, n)])
 df$D_unemp_l3 <- c(NA, NA, NA, df$D_unemp[-c(n-2, n-1, n)])
 
 # Log GDP 
-df$D_L_gdp_l1 <- c(NA, df$D_L_gdp[-n])
-df$D_L_gdp_l2 <- c(NA, NA, df$D_L_gdp[-c(n-1, n)])
+df$D2_L_gdp_l1 <- c(NA, df$D2_L_gdp[-n])
+df$D2_L_gdp_l2 <- c(NA, NA, df$D2_L_gdp[-c(n-1, n)])
+df$D2_L_gdp_l3 <- c(NA, NA, NA, df$D2_L_gdp[-c(n-2, n-1, n)])
+
+# Government expenditure share of GDP
+df$D2_gov_gdp_l1 <- c(NA, df$D2_gov_gdp[-n])
+df$D2_gov_gdp_l2 <- c(NA, NA, df$D2_gov_gdp[-c(n-1, n)])
+df$D2_gov_gdp_l3 <- c(NA, NA, NA, df$D2_gov_gdp[-c(n-2, n-1, n)])
+
+# Inflation
+df$D_infl_l1 <- c(NA, df$D_infl[-n])
+df$D_infl_l2 <- c(NA, NA, df$D_infl[-c(n-1, n)])
+df$D_infl_l3 <- c(NA, NA, NA, df$D_infl[-c(n-2, n-1, n)])
 
 # College attainment
-df$D_col_l1 <- c(NA, df$D_col[-n])
-df$D_col_l2 <- c(NA, NA, df$D_col[-c(n-1, n)])
+df$D2_col_l1 <- c(NA, df$D2_col[-n])
+df$D2_col_l2 <- c(NA, NA, df$D2_col[-c(n-1, n)])
+df$D2_col_l3 <- c(NA, NA, NA, df$D2_col[-c(n-2, n-1, n)])
+
+# High school attainment
+df$D2_hs_l1 <- c(NA, df$D2_hs[-n])
+df$D2_hs_l2 <- c(NA, NA, df$D2_hs[-c(n-1, n)])
+df$D2_hs_l3 <- c(NA, NA, NA, df$D2_hs[-c(n-2, n-1, n)])
+
+# Female college attainment
+df$D_col_fem_l1 <- c(NA, df$D_col_fem[-n])
+df$D_col_fem_l2 <- c(NA, NA, df$D_col_fem[-c(n-1, n)])
+df$D_col_fem_l3 <- c(NA, NA, NA, df$D_col_fem[-c(n-2, n-1, n)])
+
+# Female high school attainment
+df$D2_hs_fem_l1 <- c(NA, df$D2_hs_fem[-n])
+df$D2_hs_fem_l2 <- c(NA, NA, df$D2_hs_fem[-c(n-1, n)])
+df$D2_hs_fem_l3 <- c(NA, NA, NA, df$D2_hs_fem[-c(n-2, n-1, n)])
 
 # AR lag of the dependent variable (lag 2 - significant in Gindelsky)
 df$D_GINI_lag2 <- c(NA, NA, df$D_GINI[-c(n-1, n)])
@@ -215,17 +249,22 @@ df$D_GINI_lag2 <- c(NA, NA, df$D_GINI[-c(n-1, n)])
 df$d2007 <- ifelse(df$YEAR == 2007, 1, 0)
 df$d2020 <- ifelse(df$YEAR == 2020, 1, 0)
 
-# Remove any rows that still have NA after creating all the lags
+# Remove rows with missing values after lag creation
 model_data <- df[complete.cases(df), ]
 cat("Observations available for modeling:", nrow(model_data), "\n")
 
 # Run the General Unrestricted Model with all candidates
-gum <- lm(D_GINI ~ D_GINI_lag2 +
-            D2_lfpr_l1 + D2_lfpr_l2 + D2_lfpr_l3 +
+gum <- lm(D_GINI ~
+            D_GINI_lag2 + D2_lfpr_l1 + D2_lfpr_l2 + D2_lfpr_l3 +
             D2_fem_lfpr_l1 + D2_fem_lfpr_l2 + D2_fem_lfpr_l3 +
             D_unemp_l1 + D_unemp_l2 + D_unemp_l3 +
-            D_L_gdp_l1 + D_L_gdp_l2 +
-            D_col_l1   + D_col_l2   +
+            D2_L_gdp_l1 + D2_L_gdp_l2 + D2_L_gdp_l3 +
+            D2_gov_gdp_l1 + D2_gov_gdp_l2 + D2_gov_gdp_l3 +
+            D_infl_l1 + D_infl_l2 + D_infl_l3 +
+            D2_col_l1 + D2_col_l2 + D2_col_l3 +
+            D2_hs_l1 + D2_hs_l2 + D2_hs_l3 +
+            D_col_fem_l1 + D_col_fem_l2 + D_col_fem_l3 +
+            D2_hs_fem_l1 + D2_hs_fem_l2 + D2_hs_fem_l3 +
             d2007 + d2020,
           data = model_data)
 
@@ -234,20 +273,44 @@ summary(gum)
 # -----------------------------------------------------------------------------
 # SECTION 7: Final Parsimonious Model (General-to-Specific Selection)
 #
-# Look at the GUM summary above
-# Find the variable with the largest p-value - if it is above 0.05, drop it
-# Re-run the model without it, then repeat
-# Stop when every remaining variable has p-value < 0.05
+# Starting from the GUM above, remove highly insignificant variables first,
+# then re-estimate the model after each reduction.
 #
-# The model below shows the final result after that process
+# The reduced models below show the general-to-specific selection process.
+# Variables were removed when they had weak statistical significance and did
+# not improve the overall model fit.
 # -----------------------------------------------------------------------------
 
 cat("\n--- STEP 3: FINAL PARSIMONIOUS MODEL ---\n")
 
-final_model <- lm(D_GINI ~ D_GINI_lag2 +
-                    D2_lfpr_l1 + D2_lfpr_l2 + D2_lfpr_l3 +
-                    D_unemp_l2 +
-                    d2007 + d2020,
+# First reduction: keep strongest candidates from the GUM
+reduced <- lm(D_GINI ~
+                D_GINI_lag2 +
+                D_unemp_l1 + D_unemp_l2 +
+                D2_L_gdp_l1 +
+                D2_col_l3 +
+                d2007 + d2020,
+              data = model_data)
+
+summary(reduced)
+
+# Second reduction: remove insignificant COVID dummy
+reduced2 <- lm(D_GINI ~
+                 D_GINI_lag2 +
+                 D_unemp_l1 + D_unemp_l2 +
+                 D2_L_gdp_l1 +
+                 D2_col_l3 +
+                 d2007,
+               data = model_data)
+
+summary(reduced2)
+
+# Final model: remove weak college attainment variable
+final_model <- lm(D_GINI ~
+                    D_GINI_lag2 +
+                    D_unemp_l1 + D_unemp_l2 +
+                    D2_L_gdp_l1 +
+                    d2007,
                   data = model_data)
 
 summary(final_model)
@@ -269,9 +332,6 @@ cat("\n--- IN-SAMPLE EVALUATION ---\n")
 # Get the model's fitted values and the corresponding actual values
 fitted_vals <- fitted(final_model)
 actual_vals <- model_data$D_GINI
-
-# Make sure lengths match
-actual_vals <- actual_vals[as.integer(names(fitted_vals))]
 
 # Calculate residuals 
 resids <- actual_vals - fitted_vals
@@ -332,10 +392,11 @@ cat("Test period:    ", min(test_data$YEAR), "to", max(test_data$YEAR),
     "-- observations:", nrow(test_data), "\n")
 
 # Estimate the same model specification using only the training data
-model_train <- lm(D_GINI ~ D_GINI_lag2 +
-                    D2_lfpr_l1 + D2_lfpr_l2 + D2_lfpr_l3 +
-                    D_unemp_l2 +
-                    d2007 + d2020,
+model_train <- lm(D_GINI ~
+                    D_GINI_lag2 +
+                    D_unemp_l1 + D_unemp_l2 +
+                    D2_L_gdp_l1 +
+                    d2007,
                   data = train_data)
 
 cat("\nModel re-estimated on training data only:\n")
@@ -360,8 +421,17 @@ cat("  Our model -- RMSE:", round(RMSE_forecast, 4),
     "| MAPE:", round(MAPE_forecast, 4), "%\n")
 cat("  Naive     -- RMSE:", round(RMSE_naive_fc, 4),
     "| MAPE:", round(MAPE_naive_fc, 4), "%\n")
-cat("  Improvement over naive:",
-    round(MAPE_naive_fc - MAPE_forecast, 2), "percentage points\n")
+
+mape_diff <- round(MAPE_naive_fc - MAPE_forecast, 2)
+
+if (mape_diff > 0) {
+  cat("  Our model improves MAPE by",
+      mape_diff, "percentage points over the naive model\n")
+} else {
+  cat("  Our model underperforms the naive model by",
+      abs(mape_diff), "percentage points in MAPE\n")
+}
+# Note: MAPE is unstable here because D_GINI can be close to zero.
 
 # Convert differenced forecasts back to Gini levels for the plot
 # Start from the last known Gini value at the end of training (2015)
@@ -389,7 +459,7 @@ results_table <- data.frame(
                0.363)
 )
 print(results_table)
-write.csv(results_table, "model_metrics_full.csv", row.names = FALSE)
+write.csv(results_table, "Model/model_metrics_full.csv", row.names = FALSE)
 
 # -----------------------------------------------------------------------------
 # SECTION 11: Plots
@@ -398,13 +468,13 @@ write.csv(results_table, "model_metrics_full.csv", row.names = FALSE)
 cat("\n--- GENERATING PLOTS ---\n")
 
 # Plot 1: Gini index in levels over time
-png("plot1_gini_levels.png", width = 900, height = 500, res = 120)
+png("Model/plot1_gini_levels.png", width = 900, height = 500, res = 120)
 print(
   ggplot(df, aes(x = YEAR, y = GINI)) +
     geom_line(color = "navy", linewidth = 1.1) +
     geom_point(color = "navy", size = 1.5) +
     labs(title = "U.S. Gini Index Over Time",
-         subtitle = "Source: Census Bureau CPS ASEC, 1980-2024",
+         subtitle = "Source: Census Bureau CPS ASEC, 1982-2024",
          x = "Year", y = "Gini Coefficient") +
     theme_minimal()
 )
@@ -413,7 +483,7 @@ cat("Saved: plot1_gini_levels.png\n")
 
 # Plot 2: First-differenced Gini 
 diff_df <- df[!is.na(df$D_GINI), ]
-png("plot2_gini_differenced.png", width = 900, height = 500, res = 120)
+png("Model/plot2_gini_differenced.png", width = 900, height = 500, res = 120)
 print(
   ggplot(diff_df, aes(x = YEAR, y = D_GINI)) +
     geom_line(color = "steelblue", linewidth = 1) +
@@ -427,15 +497,14 @@ dev.off()
 cat("Saved: plot2_gini_differenced.png\n")
 
 # Plot 3: In-sample fitted vs actual (in differences)
-fit_df <- data.frame(
-  Year   = model_data$YEAR,
-  Actual = actual_vals,
-  Fitted = fitted_vals
-)
+fit_df <- model_data[complete.cases(model.frame(final_model)), ]
 
-png("plot3_fitted_vs_actual.png", width = 900, height = 500, res = 120)
+fit_df$Actual <- fit_df$D_GINI
+fit_df$Fitted <- fitted(final_model)
+
+png("Model/plot3_fitted_vs_actual.png", width = 900, height = 500, res = 120)
 print(
-  ggplot(fit_df, aes(x = Year)) +
+  ggplot(fit_df, aes(x = YEAR)) +
     geom_line(aes(y = Actual, color = "Actual"),    linewidth = 1.2) +
     geom_line(aes(y = Fitted, color = "Model Fit"), linewidth = 1,
               linetype = "dashed") +
@@ -449,20 +518,20 @@ dev.off()
 cat("Saved: plot3_fitted_vs_actual.png\n")
 
 # Plot 4: In-sample fit converted back to Gini levels
-base_gini   <- df$GINI[df$YEAR == min(model_data$YEAR) - 1]
-gini_actual <- base_gini + cumsum(actual_vals)
-gini_fitted <- base_gini + cumsum(fitted_vals)
+base_gini <- df$GINI[df$YEAR == min(fit_df$YEAR) - 1]
+gini_actual <- base_gini + cumsum(fit_df$Actual)
+gini_fitted <- base_gini + cumsum(fit_df$Fitted)
 
 levels_df <- data.frame(
-  Year   = model_data$YEAR,
+  YEAR   = fit_df$YEAR,
   Actual = gini_actual,
   Fitted = gini_fitted
 )
 
-png("plot4_levels_comparison.png", width = 900, height = 500, res = 120)
+png("Model/plot4_levels_comparison.png", width = 900, height = 500, res = 120)
 print(
-  ggplot(levels_df, aes(x = Year)) +
-    geom_line(aes(y = Actual, color = "Actual"),    linewidth = 1.2) +
+  ggplot(levels_df, aes(x = YEAR)) +
+    geom_line(aes(y = Actual, color = "Actual"), linewidth = 1.2) +
     geom_line(aes(y = Fitted, color = "Model Fit"), linewidth = 1,
               linetype = "dashed") +
     scale_color_manual(values = c("Actual" = "navy", "Model Fit" = "darkorange")) +
@@ -477,19 +546,20 @@ cat("Saved: plot4_levels_comparison.png\n")
 
 # Plot 5: Pseudo-out-of-sample forecast vs actual (the key forecast plot)
 forecast_df <- data.frame(
-  Year     = c(2015, test_data$YEAR),
+  YEAR     = c(2015, test_data$YEAR),
   Actual   = c(last_train_gini, actual_fc_levels),
   Forecast = c(last_train_gini, forecast_levels)
 )
 
-png("plot5_forecast_vs_actual.png", width = 900, height = 500, res = 120)
+png("Model/plot5_forecast_vs_actual.png", width = 900, height = 500, res = 120)
 print(
-  ggplot(forecast_df, aes(x = Year)) +
+  ggplot(forecast_df, aes(x = YEAR)) +
     geom_line(aes(y = Actual,   color = "Actual"),   linewidth = 1.2) +
     geom_line(aes(y = Forecast, color = "Forecast"), linewidth = 1,
               linetype = "dashed") +
     geom_vline(xintercept = 2015, linetype = "dotted", color = "gray40") +
-    annotate("text", x = 2015.2, y = min(forecast_df$Actual),
+    annotate("text", x = 2015.2,
+             y = min(c(forecast_df$Actual, forecast_df$Forecast), na.rm = TRUE),
              label = "Forecast starts", size = 3, color = "gray40", hjust = 0) +
     scale_color_manual(values = c("Actual" = "navy", "Forecast" = "darkorange")) +
     labs(title = "Pseudo-Out-of-Sample Forecast: Gini Index (2016-2024)",
@@ -511,3 +581,23 @@ cat("  plot3_fitted_vs_actual.png   - In-sample fit (differences)\n")
 cat("  plot4_levels_comparison.png  - In-sample fit (levels)\n")
 cat("  plot5_forecast_vs_actual.png - Forecast vs actual 2016-2024\n")
 
+
+
+# -----------------------------------------------------------------------------
+# ACF/PACF Diagnostics
+# -----------------------------------------------------------------------------
+
+# ACF and PACF of differenced Gini series
+# Used to visually inspect autoregressive structure before lag selection
+acf(df$D_GINI,
+    main = "ACF of Differenced Gini (D_GINI)")
+
+pacf(df$D_GINI,
+     main = "PACF of Differenced Gini (D_GINI)")
+
+
+# ACF of final model residuals
+# Residual autocorrelation should ideally be small / insignificant
+
+acf(residuals(final_model),
+    main = "ACF of Final Model Residuals")
